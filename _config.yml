@@ -1,0 +1,65 @@
+# markdown: redcarpet
+redcarpet:
+  extensions: ["no_intra_emphasis", "fenced_code_blocks", "autolink", "tables", "with_toc_data"]
+rouge: true
+# plugins: ./_plugins
+paginate: 8
+permalink: /:year/:month/:day/:title/
+
+safe: false
+
+#站点基础配置
+title: For The Best Thing In The World
+subTitle:  Work Hard to Enjoy Them.
+description: 写东西的Cache
+url: https://yonghaowu.github.io/
+
+#菜单配置
+nav:
+  - text: 首页
+    url: /
+  - text: 每个人的一生 都是一次远行
+    url: /experience/
+  - text: 文章列表
+    url: /archives/
+  - text: 关于我
+    url: /about/
+  - text: 友情链接
+    url: /friend_link/
+
+#theme config
+themes: /themes/violet
+
+#配置你喜欢的顶部背景图片
+headimg:
+  - item: /T1U_YlFAlcXXbErygJ-2048-260.jpg
+  - item: /T1U_YlFAlcXXbErygJ-2048-260.jpg
+  - item: /T1U_YlFAlcXXbErygJ-2048-260.jpg
+  - item: /T1U_YlFAlcXXbErygJ-2048-260.jpg
+#关注我
+follow:
+
+  - class: fa-github
+    url: https://github.com/YongHaoWu
+  - class: fa-twitter
+    url: #
+  - class: fa-rss
+    url: #
+
+#作者信息
+author:
+  name: YongHaoHu
+  link: #
+  img: 
+
+#评论信息
+disqus:
+  config: true
+  id: yonghaohu
+
+duoshuo:
+  config: false
+  id: yonghaohu
+
+gems: [jekyll-coffeescript, jekyll-watch, jekyll-assets, jekyll-paginate]
+plugins: [jekyll-paginate]

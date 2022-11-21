@@ -1,0 +1,2133 @@
+<html>
+<head>
+<title> 实现sprintf--浮点数打印字符串</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="robots" content="index, follow">
+<meta name="title" content="Printing Floating-Point Numbers">
+<meta name="author" content="Ryan Juckett">
+
+<link rel="stylesheet" type="text/css" href="http://www.ryanjuckett.com/themes/sunset/theme.css">
+<script type="text/javascript" src="http://www.ryanjuckett.com/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script type="text/javascript" src="http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shCore.js"></script>
+<script type="text/javascript" src="http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shAutoloader.js"></script>
+<link href="http://www.ryanjuckett.com/SyntaxHighlighter/styles/shCore.css" rel="stylesheet" type="text/css" />
+<link href="http://www.ryanjuckett.com/SyntaxHighlighter/styles/shThemeDefault.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<script type="text/javascript">
+
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-6827164-1']);
+_gaq.push(['_trackPageview']);
+
+(function() {
+ var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+ var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+<table id="main_table">
+    <tr>
+        <td colspan="2" style="padding:0">
+            <table id="title_bar">
+                <tr>
+                    <td id="title_bar_left">&nbsp;</td>
+                    <td id="title_bar_center"><img class="layout" class="layout" id="title" src="http://www.ryanjuckett.com/themes/sunset/title.gif"/></td>
+                    <td id="title_bar_right">&nbsp;</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr height="100%">
+        <td id="menu">
+            <table id="menu_table">
+                <tr>
+                    <td id="menu_top"><a class="menu_item" href="http://www.ryanjuckett.com/index.php?section=home">Home</a><br/>
+                        <a class="menu_item" href="http://www.ryanjuckett.com/index.php?section=projects">Projects</a><br/>
+                        <a class="active_menu_item" href="http://www.ryanjuckett.com/index.php?section=programming">Programming</a><br/>
+                        <a class="menu_item" href="http://www.ryanjuckett.com/resume">Resume</a><br/>
+                        <a class="menu_item" href="http://www.ryanjuckett.com/contact">Contact</a><br/>
+                    </td>
+                </tr>
+                <tr>
+                    <td id="menu_bottom">&nbsp;</td>
+                </tr>            
+            </table>
+        </td>
+        <td id="content">
+            <table id="content_table">
+                <tr>
+                    <td id="content_top_left">&nbsp;</td>
+                    <td id="content_top_center">&nbsp;</td>
+                    <td id="content_top_right">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td id="content_article" colspan="3"><h1>Printing Floating-Point Numbers </h1><div
+                            class="date">March 05, 2014</div><p><img style="float: right; margin: 5px;"
+                        alt="Dragon Curve"
+                        src="http://www.ryanjuckett.com/programming/printing-floating-point-numbers/dragon2.gif"
+                        <ul>
+                            <li><a
+                                href="http://www.ryanjuckett.com/programming/printing-floating-point-numbers/">Part
+                                1: Background</a></li>
+                            <li><a
+                                href="http://www.ryanjuckett.com/programming/printing-floating-point-numbers/part-2/">Part
+                                2: Dragon4</a></li>
+                            <li><a
+                                href="http://www.ryanjuckett.com/programming/printing-floating-point-numbers/part-3/">Part
+                                3: Formatting</a></li>
+                            <li><a
+                                href="http://www.ryanjuckett.com/programming/printing-floating-point-numbers/part-4/">Part
+                                4: Results</a></li>
+                        </ul>
+
+                        <h2>References</h2>
+
+                        <p>If you're interested in more details on the subject, these are the primary set of
+                        papers.</p>
+                        <ul>
+                            <li><a href="http://kurtstephens.com/files/p372-steele.pdf">How to Print
+                                Floating-Point Numbers Accurately</a> by Steele and White in 1990</li>
+                            <ul>
+                                <li>The link actually points to a retrospective on the original paper from 2003
+                                followed by the original 1990 document.</li>
+                            </ul>
+                            <li><a href="http://cm.bell-labs.com/cm/cs/what/ampl/REFS/rounding.pdf">Correctly
+                                Rounded Binary-Decimal and Decimal-Binary Conversions</a> by Gay in 1990</li>
+                            <li><a
+                                href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.72.4656&rep=rep1&type=pdf">Printing
+                                Floating-Point Numbers Quickly and Accurately</a> by Burger and Dybvig in
+                            1996</li>
+                            <li><a
+                                href="http://www.cs.tufts.edu/~nr/cs257/archive/florian-loitsch/printf.pdf">Printing
+                                Floating-Point Numbers Quickly and Accurately with Integers</a> by Loitsch in
+                            2010</li>
+                        </ul>
+
+                        <p>If you're okay with using code with a less permissive license, these are the only
+                        correct implementations I've been able to find.</p>
+                        <ul>
+                            <li><a href="http://www.netlib.org/fp/dtoa.c">dtoa.c</a></li>
+                            <ul>
+                                <li>Written by David Gay (author of one of the above papers), this seems to be the
+                                accepted safe implementation. It has been iterated on since 1991 and is used in
+                                everything from <a
+                                    href="http://docs.python.org/3.3/license.html#strtod-and-dtoa">Python</a> to
+                                <a
+                                    href="https://dev.mysql.com/doc/mysql-security-excerpt/5.1/en/license-dtoa.html">MySQL</a>
+                                to the <a
+                                    href="http://www.nintendo.com/consumer/downloads/WiiRVKChEng.pdf">Nintendo
+                                    Wii</a>.</li>
+                            </ul>
+                            <li><a href="https://code.google.com/p/double-conversion/">double-conversion</a></li>
+                            <ul>
+                                <li>This is an implementation of the Grisu algorithm mentioned above and is
+                                maintained by the author of the paper. It was written for the V8 JavaScript engine
+                                in Google Chrome. I think it is also used by Firefox among other large
+                                projects.</li>
+                            </ul>
+                        </ul>
+
+                        <p>If you've found your way here, you might also enjoy these two sites.</p>
+                        <ul>
+                            <li><a href="http://randomascii.wordpress.com/">Random ASCII</a></li>
+                            <ul>
+                                <li>Bruce Dawson's blog contains a ton of floating-point related articles that are
+                                easy reads.</li>
+                            </ul>
+                            <li><a href="http://www.exploringbinary.com/">Exploring Binary</a></li>
+                            <ul>
+                                <li>Rick Regan's blog is almost entirely floating-point related articles and he
+                                often dissects conversion implementations finding all sorts of bugs.</li>
+                            </ul>
+                        </ul>
+
+                        <h2>基本知识</h2>
+
+                        <p>在我们研究真正的算法之前，先一起看看一个简单的（不准确）的转换正浮点数的方法。如果浮点数可以储存无限精度，那么这个算法确实没有任何问题。但可惜的是，我们的计算机不能精确表示浮点数，这只是一碟在我们在Dragon4前的小菜。</p>
+                        <p>&nbsp;</p>
+                        <p>一个数字可以表示成一系列的数字乘以10的次幂（作为程序猿的你不知道的话请到课室外面站），举例子， \(123.456\) 等于 \(1 \cdot 10^2 + 2 \cdot 10^1 + 3 \cdot 10^0 + 4 \cdot
+                        10^{-1} + 5 \cdot 10^{-2} + 4 \cdot 10^{-3}\). </p>
+
+                        <pre class="brush: cpp">
+                                                                                                                                                                                                                                                                                                                                                                                                                          const int c_maxDigits = 256; // input binary floating-point number to convert from
+                                                                                                                                                                                                                                                                                                                                                                                                                          double value = 122.5;   // the number to convert
+
+                                                                                                                                                                                                                                                                                                                                                                                                                          // output decimal representation to convert to
+                                                                                                                                                                                                                                                                                                                                                                                                                          char   decimalDigits[c_maxDigits]; // buffer to put the decimal representation in
+                                                                                                                                                                                                                                                                                                                                                                                                                          int    numDigits = 0;              // this will be set to the number of digits in the buffer
+                                                                                                                                                                                                                                                                                                                                                                                                                          int    firstDigitExponent = 0;     // this will be set to the the base 10 exponent of the first
+                                                                                                                                                                                                                                                                                                                                                                                                                                                             //  digit in the buffer   
+
+                                                                                                                                                                                                                                                                                                                                                                                                                   // Compute the first digit's exponent in the equation digit*10^exponent
+                                                                                                                                                                                                                                                                                                                                                                                                                   // (e.g. 122.5 would compute a 2 because its first digit is in the hundreds place) 
+                                                                                                                                                                                                                                                                                                                                                                                                                   firstDigitExponent = (int)floor( log10(value) );
+
+                                                                                                                                                                                                                                                                                                                                                                                                                   // Scale the input value such that the first digit is in the ones place
+                                                                                                                                                                                                                                                                                                                                                                                                                   // (e.g. 122.5 would become 1.225).
+                                                                                                                                                                                                                                                                                                                                                                                                                   value = value / pow(10, firstDigitExponent);
+
+                                                                                                                                                                                                                                                                                                                                                                                                                   // while there is a non-zero value to print and we have room in the buffer
+                                                                                                                                                                                                                                                                                                                                                                                                                   while (value &gt; 0.0 &amp;&amp; numDigits &lt; c_maxDigits)
+                                                                                                                                                                                                                                                                                                                                                                                                                   {
+                                                                                                                                                                                                                                                                                                                                                                                                                          // Output the current digit.
+                                                                                                                                                                                                                                                                                                                                                                                                                         double digit = floor(value);
+                                                                                                                                                                                                                                                                                                                                                                                                                         decimalDigits[numDigits] = '0' + (char)digit; // convert to an ASCII character
+                                                                                                                                                                                                                                                                                                                                                                                                                         ++numDigits;
+
+                                                                                                                                                                                                                                                                                                                                                                                                                         // Compute the remainder by subtracting the current digit
+                                                                                                                                                                                                                                                                                                                                                                                                                         // (e.g. 1.225 would becom 0.225)
+                                                                                                                                                                                                                                                                                                                                                                                                                         value -= digit;    
+
+                                                                                                                                                                                                                                                                                                                                                                                                                         // Scale the next digit into the ones place.
+                                                                                                                                                                                                                                                                                                                                                                                                                         // (e.g.  0.225 would becom 2.25)
+                                                                                                                                                                                                                                                                                                                                                                                                                         value *= 10.0;
+                                                                                                                                                                                                                                                                                                                                                                                                                   }
+                        </pre>
+
+                        <p>但是为什么它不准确呢？问题主要来自循环里我们对浮点数进行了运算。当我们继续运行这个程序，就会发现有很多数字不能正确表示。</p>
+                        <p>&nbsp;</p>
+                        <p>同样，这个算法缺少一些必要的特性。</p>
+                        <ul>
+                            <li>精度的要求（比如只是打印小数点后6位）</li>
+                            <li>如果数字因为宽度或者buffer不够而被截断，最后的数字应该要正确的舍入。</li>
+                            <li>我们应该可以正确转换这个浮点数（包括舍入），使得这个数字是唯一表示的，可以精确从text转换回来。</li>
+                        </ul>
+
+                        <h2>Integers-整数</h2>
+                        <p>为了修复我们的实现，请回忆起初中学过的数学，我们需要使用伟大的数学知识了。谁说程序猿不需要数学的！！！<br>第一步就是将浮点数解构。作为程序员，就算是码农，我们都应该知道IEEE浮点数由符号位(sign bits)，指数位(exponent bits)和尾数位(mantissa bits)组成。</p>
+                        <p>&nbsp;</p>
+                        <table cellpadding="4px" border="1px">
+                            <tr style="font-weight:bold; background-color: #CCC"><td>type</td><td>sign
+                                    bits</td><td>exponent bits</td><td>mantissa bits</td></tr>
+                            <tr><td>32-bit float</td><td>1</td><td>8</td><td>23</td></tr>
+                            <tr><td>64-bit double</td><td>1</td><td>11</td><td>52</td></tr>
+                        </table>
+                        <p>&nbsp;</p> <p>再一次强调，我们现在这个算法只是小白版，目前还不需要支持负数，所以我们先忽略符号位。在我们使用对数知识进行惊为天人的数学推理前（初中生题目），我们需要先理解浮点数是怎么由那三个部分转换过来的。 </p>
+                        <p>&nbsp;</p>
+                        <p>有4种浮点数可以由指数和尾数表示。</p>
+                        <p>&nbsp;</p>
+                        <table cellpadding="4px" border="1px">
+                            <tr style="font-weight:bold; background-color: #CCC">
+                                <td></td>
+                                <td>exponent</td>
+                                <td>mantissa</td>
+                                <td>usage</td>
+                            </tr>
+                            <tr style="vertical-align:top">
+                                <td style="font-weight:bold"><a
+                                        href="http://en.wikipedia.org/wiki/Denormal_number">非规格化</a></td>
+                                <td>0</td>
+                                <td>任何值</td>
+                                <td>非规格化数字是一些太小而不能规格化表达的数字
+                                    . 他们真正的值是这样计算的： \(\Large{\frac
+                                    {mantissa} { 2^{numMantissaBits} } \cdot 2 ^ { 1 + 1
+                                    - 2^{numExponentBits-1}} }\).
+                                    <table>
+                                        <tr>
+                                            <td>32位的浮点数(代入32)就变成这样:</td><td>\(\Large{
+                                                \frac {mantissa} {2^{23}}
+                                                \cdot 2 ^ {1 - 127}}\)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>64位的浮点数(代入64)就变成这样: </td><td>\(\Large{
+                                                \frac {mantissa}
+                                                {2^{52}} \cdot 2 ^
+                                                {1 - 1023}}\)</td>
+                                        </tr>
+                                </table></td>
+                            </tr>
+                            <tr style="vertical-align:top; background-color: #EEE">
+                                <td style="font-weight:bold;"><a href="http://en.wikipedia.org/wiki/Normal_number_(computing)">规格化</a></td>
+                                <td>大于0小于最大值</td><td>任何值</td>
+                                <td>大部分浮点数都是规格化数字. 他们真正的值是这样计算的： \(\Large{(1 +
+                                    \frac {mantissa} {2^{numMantissaBits}}) \cdot 2 ^ {exponent + 1 - 2^{numExponentBits-1}}}\).
+                                    <table>
+                                        <tr>
+                                            <td>32位的浮点数(代入32)就变成这样：</td><td>\(\Large{(1
+                                                + \frac{mantissa} {2^{23}}) \cdot 2 ^ {exponent
+                                                -
+                                                127}}\)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>64位的浮点数(代入64)就变成这样：</td><td>\(\Large{(1
+                                                +
+                                                \frac{mantissa}
+                                                {2^{52}})
+                                                \cdot
+                                                2
+                                                ^
+                                                {exponent
+                                                -
+                                                1023}}\)</td>
+                                        </tr>
+                                </table></td>
+                            </tr>
+                            <tr
+                                style="vertical-align:top">
+                                <td
+                                    style="font-weight:bold;"><a
+                                        href="http://en.wikipedia.org/wiki/Infinity#Computing">Infinity</a></td>
+                                <td>最大值 (32位的浮点数就是：0xFF,64位的double就是： 0x7FF)</td>
+                                <td>0</td>
+                                <td>Inf的结果来自一些不恰当的计算比如除0.</td>
+                            </tr>
+                            <tr style="vertical-align:top; background-color: #EEE">
+                                <td style="font-weight:bold;"><a href="http://en.wikipedia.org/wiki/NaN">NaN</a></td>
+                                <td>最大值 (32位的浮点数就是：0xFF 64位的double就是： 0x7FF </td>
+                                <td>大于0</td>
+                                <td>NaN 意思是 "not a number" 出现这个结果通常是计算得到的结果不是真正的数字，比如对负数开方.</td> </tr>
+                        </table>
+                        <p>&nbsp;</p> <p>我们的数字转换算法只是为规格化和非规格化数逐个数字取出来。就像符号位一样，对inf和NaN的处理都留给调用它的函数，我们先不处理。</p>
+                        <p>&nbsp;</p>
+                        <p>无论是规格化数还是非规格化数，现在我们知道怎么求出32位和64位的浮点数的值了。用无符号型整数
+                        <span style="font-family:'Courier New', Courier, monospace">valueMantissa</span>来代表尾数，有符号整数
+                        <span style="font-family:'Courier New', Courier, monospace">valueExponent</span>代表指数，输入的浮点数的值都等于 \((valueMantissa \cdot 2^{valueExponent})\).</p> <p>&nbsp;</p>
+                        <table cellpadding="4px" border="1px">
+                            <tr style="font-weight:bold; background-color: #CCC">
+                                <td>代表</td>
+                                <td>转换</td>
+                                <td>valueMantissa</td>
+                                <td>valueExponent</td>
+                            </tr>
+                            <tr style="vertical-align:top"> <td>32-bit 非规格化数</td>
+                                <td> The floating point equation is \(value = \Large{\frac{mantissa} {2^{23}} \cdot 2 ^ {1-127}}\)<br/> Factor a \(2^{23}\) out of the exponent and cancel out the denominator<br/> &nbsp;\(value = \Large{\frac{mantissa} {2^{23}} \cdot 2^{23} \cdot 2 ^ {1-127-23}}\)<br/> &nbsp;\(value = mantissa \cdot 2 ^ {1-127-23}\)<br/> </td> <td>\(mantissa\)</td> <td>\(-149\)</td> </tr>
+                            <tr style="vertical-align:top; background-color: #EEE"> <td>32-bit 规格化数</td>
+                                <td> The floating point equation is \(value = \Large{(1 + \frac{mantissa} {2^{23}}) \cdot 2 ^ {exponent-127}}\)<br/> Factor a \(2^{23}\) out of the exponent and cancel out the denominator<br/> \(value = \Large{(1 + \frac{mantissa} {2^{23}}) \cdot 2^{23} \cdot 2 ^ {exponent-127-23}}\)<br/> \(value = (2^{23} + mantissa) \cdot 2 ^ {exponent-127-23}\)<br/> </td> <td>\(2^{23} + mantissa\)</td> <td>\(exponent - 150\)</td> </tr>
+                            <tr style="vertical-align:top"> <td>64-bit 非规格化数</td>
+                                <td> The floating point equation is \(value = \Large{ \frac{mantissa} {2^{52}} \cdot 2 ^ {1-1023}}\)<br/> Factor a \(2^{52}\) out of the exponent and cancel out the denominator<br/> &nbsp;\(value = \Large{\frac{mantissa} {2^{52}} \cdot 2^{52} \cdot 2 ^ {1-1023-52}}\)<br/> &nbsp;\(value = mantissa \cdot 2 ^ {1-1023-52}\)<br/> </td> <td>\(mantissa\)</td> <td>\(-1074\)</td> </tr>
+                            <tr style="vertical-align:top; background-color: #EEE"> <td>64-bit 规格化数</td>
+                                <td>
+                                    The floating point equation is \(value = \Large{(1 + \frac{mantissa} {2^{52}}) \cdot 2 ^ {exponent-1023}}\)<br/> Factor a \(2^{52}\) out of the exponent and cancel out the denominator<br/> \(value = \Large{(1 + \frac{mantissa} {2^{52}}) \cdot 2^{52} \cdot 2 ^ {exponent-1023-52}}\)<br/> \(value = (2^{52} + mantissa) \cdot 2 ^ {exponent-1023-52}\)<br/> </td> <td>\(2^{52} + mantissa\)</td> <td>\(exponent - 1075\)</td> </tr> </table> <p>&nbsp;</p> 
+
+                        <h2>Big Integers-大数</h2>
+
+                        <p>现在我们可以用 \((valueMantissa \cdot 2^{valueExponent})\)来求出所有浮点数的值了。现在我们用大数运算来重构我们的算法。</p> <p>&nbsp;</p>
+                        <p>用整数来表示数字如12很正常，但是表示小数如12.3就不是简单的事情了。对小数部分的处理，我们要用到两个整数来表示它的值：一个除数和一个被除数。<br>
+                        12.3就可以用除数123和被除数10来表示了，因为\(12.3 = \large{\frac{123}{10}}\).用这个方法，我们就可以将二进制浮点数准确的转换成数字了，<br>但是，我们要用到<em>非常</em> 大的数字才可以，不然无法保证精度。<br> 32位和64位的整数都会截断，事实上，当要表示64位的double类型时，我们要用到超过1000位的整数来处理一些值。</p> <p>&nbsp;</p> <p>要处理这么大的数字，我们要创建一个<span style="font-family:'Courier New', Courier, monospace">tBigInt</span>
+结构体和为它写一些计算函数。假设现在有这么一个结构体，我们可以重构算法成下面这个样子了。
+
+对了，我还要提醒你，我们的算法依然是为了让你看懂先～而不是优化后的。<br>
+（接下来就有趣了）为什么？因为伟大的数学表演要开始了！！</p> <pre class="brush: cpp">
+                 const int c_maxDigits = 256; // input number to convert from: value = valueMantissa * 2^valueExponent
+                 double value = 122.5; // in memory 0x405EA00000000000
+                 // (sign=0x0, exponent=0x405, mantissa=0xEA00000000000)
+                 uint64_t valueMantissa = 8620171161763840ull;
+                 int32_t valueExponent = -46; // output decimal representation to convert to
+                 char decimalDigits[c_maxDigits]; // buffer to put the decimal representation in
+                 int numDigits = 0; // this will be set to the number of digits in the buffer
+                 int firstDigitExponent = 0; // this will be set to the the base 10 exponent of the first
+                 // digit in the buffer   
+                                                 // (e.g.  122.5 would compute a 2 because its first digit is in the hundreds place) 
+                 firstDigitExponent = (int)floor( log10(value)); // We represent value as (valueNumerator / valueDenominator)
+                 tBigInt valueNumerator;
+                 tBigInt valueDenominator;
+                 if (exponent > 0) { // value = (mantissa * 2^exponent) / (1)
+                 valueNumerator = BigInt_ShiftLeft(valueMantissa, valueExponent);
+                 valueDenominator = 1;
+                                                                              }
+                                                                              else { // value = (mantissa) / (2^(-exponent))
+                                                                                        valueNumerator = mantissa;
+                                                                                            valueDenominator = BigInt_ShiftLeft(1, -valueExponent);
+                                                                              }
+                                                                               // Scale the input value such that the first digit is in the ones place
+                                                                              // (e.g.  122.5 would become 1.225).
+                                                                              // value = value / pow(10, firstDigitExponent)
+                                                                              if (digitExponent > 0) { // The exponent is positive creating a division so we multiply up the denominator.
+                                                                                              valueDenominator = BigInt_Multiply( valueDenominator, BigInt_Pow(10,digitExponent));
+                                                                                  } else if (digitExponent < 0) {
+                                                                                                  // The exponent is negative creating a multiplication so we multiply up the numerator.
+                                                                                                      valueNumerator = BigInt_Multiply( valueNumerator, BigInt_Pow(10,digitExponent));
+                                                                                          }
+                                                                                           // while there is a non-zero value to print and we have room in the buffer
+                                                                                              while (valueNumerator &gt; 0.0 &amp;&amp; numDigits &lt; c_maxDigits) { // Output the current digit.
+                                                                                                            double digit = BigInt_DivideRoundDown(valueNumerator,valueDenominator);
+                                                                                                                decimalDigits[numDigits] = '0' + (char)digit; // convert to an ASCII charater
+                                                                                                                    ++numDigits; 
+                                                                                                                              // Compute the remainder by subtracting the current digit
+                                                                                                                                  // (e.g.  1.225 would becom 0.225)
+                                                                                                                                      valueNumerator = BigInt_Subtract( BigInt_Multiply(digit,valueDenominator));    
+                                                                                                                                              // Scale the next digit into the ones place.
+                                                                                                                                                  // (e.g.  0.225 would becom 2.25)
+                                                                                                                                                      valueNumerator = BigInt_Multiply(valueNumerator,10);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                }
+                        </pre>
+                        <p>&nbsp;</p>
+                        <h2>Logarithms--对数</h2>
+                        <p>在上面的例子中，唯一剩下的浮点数计算就是用<span style="font-family:'Courier New', Courier, monospace">log10()</span>函数来计算到第一个数字的指数（为了科学计数法表示）。这是一个潜在的不准确转换的因素。 在Dragon4算法的实现上，Steele和White用一个高精度整数不断除以10来循环计算它，这是很简单而且显然而见的办法，结果不言而喻，非常慢。在接下来Burger和Dybvig的论文中，提出两种优化的办法来估算出这个值，而估计出来的最多只是跟正确值相差1。<br>
+                        第一种办法就是依然用<span style="font-family:'Courier New', Courier, monospace">log10()</span>函数，但是会加上一个小的偏移值来保证<span style="font-family:'Courier New', Courier, monospace">floor()</span>函数可以恰当的舍入到正确值。
+                        <br>第二种办法就是利用伟大的数学知识来计算这个值，而我的实现就是基于第二种方法，但加了一点自己的优化。</p> <p>&nbsp;</p> <p>要计算到第一位数字的指数，我们解出这条公式：</p> <p>\(firstDigitExponent = \lfloor log_{10} value \rfloor\)</p> <p>&nbsp;</p> <p>然后我们可以用<a href="http://en.wikipedia.org/wiki/Logarithm#Change_of_base">change of base formula-对数转换公</a>来重新用2的对数来表示</p> <p>\(log_{10} value = \Large{ \frac { log_{2} value } { log_{2} 10 } }
+                        \)</p> <p>&nbsp;</p> <p>再一次使用转换公式，我们可以得到：</p> <p>\( log_{2} 10 = \Large{ \frac { log_{10} 10 } { log_{10} 2 } = \frac { 1 } { log_{10} 2 } } \)</p> <p>&nbsp;</p> <p>带入到等式\(log_{10} value\) 中，我们可以消去除法运算：</p> <p>\(log_{10} value = log_{2} value \cdot log_{10} 2 \)</p> <p>&nbsp;</p> <p>现在要计算的等式变成：</p> <p>\(firstDigitExponent = \lfloor log_{2} value \cdot log_{10} 2 \rfloor\)</p> <p>&nbsp;</p> <p>还记得我们说过 \(value =
+                        valueMantissa \cdot 2^{valueExponent}\)吗？我们可以用它来带入上面的公式，得到：</p> <p>\(log_{2} value = log_{2}(valueMantissa) + valueExponent\)</p> <p>&nbsp;</p> <p>因为我们的尾数是以二进制存储在整数里面，所以取2的对数约摸是二进制最高位的下标。准确的用公式表示是：</p> <p>\( highestMantissaBitIndex = \lfloor log_{2}(valueMantissa) \rfloor \)</p> <p>&nbsp;</p> <p>因为
+                        \(valueExponent\)是一个整数，可以得到: </p> <p>\( \lfloor log_{2} value \rfloor = \lfloor log_{2}(valueMantissa) \rfloor + valueExponent\)</p> <p>\( \lfloor log_{2} value \rfloor = highestMantissaBitIndex + valueExponent\)</p> <p>&nbsp;</p>
+                        <p>又因为 \(highestMantissaBitIndex\) 同样是整数，我们可以得到以下不等式： </p>
+                        <p>\( log_{2}(value) - 1 < highestMantissaBitIndex + valueExponent \leq log_{2}(value)\)</p>
+                        <p>&nbsp;</p>
+                        <p>不等式乘以 \(log_{10} 2\), 可以得到:</p>
+                        <p>\( log_{2}(value) \cdot log_{10} 2 - log_{10} 2 < log_{10} 2 \cdot (highestMantissaBitIndex + valueExponent) \leq log_{2}(value) \cdot log_{10} 2\)</p> <p>\( log_{10}(value) - log_{10} 2 &lt; log_{10} 2 \cdot (highestMantissaBitIndex + valueExponent) \leq log_{10}(value)\)</p> <p>&nbsp;</p>
+                        <p>因为我们在使用浮点型数字进行运算，所以当乘 \(log_{10} 2\)的时候，我们需要处理浮动误差.  因为它有可能会让我们稍稍超越上界，所以我们要减去一个小的偏移值 (比如 0.00001) 公式就是:</p> <p>\( log_{10}(value) - log_{10} 2 - epsilon &lt; log_{10} 2 \cdot (highestMantissaBitIndex + valueExponent) - epsilon &lt; log_{10}(value)\)</p> <p>&nbsp;</p>
+                        <p>最终，我们可以得到结果的近似值：</p>
+                        <p>\(log_{10}(value) \approx log_{10} 2 \cdot (highestMantissaBitIndex + valueExponent) - epsilon\)</p> <p>&nbsp;</p>
+                        <p>根据不等式，可以推断出我们的估算值会与正确值相差在 \(log_{10} 2 + epsilon\) 的范围内。计算 \(log_{10} 2\)我们得到近似值 0.301.  这非常棒，因为我们的估算误差小于1, 就算加上偏移值也是一样，而我们真正要计算的是 \( \lfloor log_{10}(value) \rfloor \). 因此,
+                        向下舍入得到我们的近似值误差也总是小于1的。下面这幅图有助于我们理解误差范围，以及当估算得太小时，会与正确值相差1.</p>
+                        <img src="http://www.ryanjuckett.com/programming/printing-floating-point-numbers/numberline_log.gif"/>
+                        <p>当我们除以 \(10^{firstDigitExponent}\)后，我们可以检验估算是否正确和修正不正确的检验. 如果我们用两个整数表示的浮点数的结果中，除数依然比被除数大10倍，那么，我们的估算是错误的，我们要把被除数乘10和增加我们估算的指数。</p> <p>&nbsp;</p> <p>当我们真正去写Dragon4的算法时，你会发现，要简化计算，最好计算 \(1 + \lfloor log_{10} v \rfloor\).  因此，我们不向下取舍而向上。
+                        这个取舍的方法来自Burge和Dybvig的论文。上面提到了，我们现在的误差是在0.301到0.302之间。 \(1.0 - log_{10} 2 - epsilon\), we can shift our error bounds lower.  Explicitly, I subtract 0.69 from the estimate which moves the error range from about (-0.301, -0.69] to about (-0.991, -0.69].</p> <p>&nbsp;</p>
+                        <p>The
+                        final
+                        inequality
+                        is:</p>
+                        <p>\(
+                        \lfloor
+                        log_{10}(value)
+                        \rfloor
+                        <
+                        \lceil
+                        log_{10}
+                        2
+                        \cdot
+                        (highestMantissaBitIndex
+                        +
+                        valueExponent)
+                        -
+                        0.69
+                        \rceil
+                        \leq
+                        \lfloor
+                        log_{10}(value)
+                        \rfloor
+                        +
+                        1\)</p>
+                        <p>&nbsp;</p>
+
+                        <h2>Minimal
+                            Output
+                            and
+                            Rounding</h2>
+                        <p>As
+                        it
+                        stands,
+                        our
+                        prototype
+                        algorithm
+                        will
+                        print
+                        a
+                        number
+                        until
+                        all
+                        precision
+                        is
+                        exhausted
+                        (i.e.
+                        when
+                        the
+                        remainder
+                        reaches
+                        zero).
+                        Because
+                        there
+                        are
+                        discrete
+                        deltas
+                        between
+                        each
+                        representable
+                        number,
+                        we
+                        don't
+                        need
+                        to
+                        print
+                        that
+                        many
+                        digits
+                        to
+                        uniquely
+                        identify
+                        a
+                        number.
+                        Thus,
+                        we
+                        are
+                        going
+                        to
+                        add
+                        support
+                        for
+                        printing
+                        the
+                        minimal
+                        number
+                        of
+                        digits
+                        needed
+                        to
+                        identify
+                        a
+                        number
+                        from
+                        its
+                        peers.
+                        For
+                        example,
+                        let's
+                        consider
+                        the
+                        following
+                        three
+                        adjacent
+                        32-bit
+                        floating-point
+                        values.</p>
+                        <p>&nbsp;</p>
+                        <table
+                            cellpadding="4px"
+                            border="1px">
+                            <tr
+                                style="font-weight:bold;
+                                background-color:
+                                #CCC"><td></td><td>binary</td>
+                                <td>exact
+                                    decimal
+                                    representation</td></tr>
+                            <tr><td>\(\large{v_{-1}}\)</td><td>0x4123c28e</td>
+                                <td>10.2349987030029296875</td></tr>
+                            <tr><td>\(\large{v_0}\)</td><td>0x4123c28f</td>
+                                <td>10.23499965667724609375</td></tr>
+                            <tr><td>\(\large{v_1}\)</td><td>0x4123c290</td>
+                                <td>10.2350006103515625</td></tr>
+                        </table>
+                        <p>&nbsp;</p>
+                        <p>There
+                        is
+                        a
+                        margin
+                        of
+                        0.00000095367431640625
+                        between
+                        each
+                        of
+                        these
+                        numbers.
+                        For
+                        any
+                        value,
+                        all
+                        numbers
+                        within
+                        the
+                        exclusive
+                        range
+                        \(\large{(value
+                        -
+                        \frac{margin}{2},
+                        value
+                        +
+                        \frac{margin}{2})}\)
+                        can
+                        uniquely
+                        identify
+                        it.
+                        For
+                        the
+                        above
+                        value,
+                        \(\large{v_0}\),
+                        we
+                        can
+                        uniquely
+                        identify
+                        it
+                        with
+                        the
+                        shorter
+                        number
+                        \(\large{v_{0s}}
+                        =
+                        10.235\)
+                        because
+                        it
+                        is
+                        closer
+                        to
+                        \(\large{v_0}\)
+                        than
+                        it
+                        is
+                        to
+                        to
+                        either
+                        \(\large{v_{-1}}\)
+                        or
+                        \(\large{v_1}\).</p>
+
+                        <img
+                        alt="Number
+                        Line"
+                        src="http://www.ryanjuckett.com/programming/printing-floating-point-numbers/numberline_minimal.gif"
+                        />
+
+                        <p>Solving
+                        this
+                        problem
+                        is
+                        what
+                        lets
+                        the
+                        Dragon4
+                        algorithm
+                        output
+                        "pretty"
+                        representations
+                        of
+                        floating
+                        point
+                        numbers.
+                        To
+                        do
+                        it,
+                        we
+                        can
+                        track
+                        the
+                        margin
+                        as
+                        a
+                        big
+                        integer
+                        with
+                        the
+                        same
+                        denominator
+                        as
+                        the
+                        value.
+                        Every
+                        time
+                        we
+                        advance
+                        to
+                        the
+                        next
+                        digit
+                        by
+                        multiplying
+                        the
+                        numerator
+                        by
+                        10,
+                        we
+                        will
+                        also
+                        multiply
+                        the
+                        margin
+                        by
+                        10.
+                        Once
+                        the
+                        next
+                        digit
+                        to
+                        print
+                        can
+                        be
+                        safely
+                        rounded
+                        up
+                        or
+                        down
+                        without
+                        leaving
+                        the
+                        bounds
+                        of
+                        the
+                        margin,
+                        we
+                        are
+                        far
+                        enough
+                        from
+                        the
+                        neighboring
+                        values
+                        to
+                        print
+                        a
+                        rounded
+                        digit
+                        and
+                        stop.</p>
+                        <p>&nbsp;</p>
+                        <p>In
+                        this
+                        image,
+                        we
+                        can
+                        see
+                        how
+                        the
+                        algorithm
+                        decides
+                        to
+                        terminate
+                        on
+                        the
+                        shortest
+                        decimal
+                        representation
+                        (the
+                        chosen
+                        numbers
+                        don't
+                        correspond
+                        to
+                        any
+                        real
+                        world
+                        floating-point
+                        format
+                        and
+                        are
+                        just
+                        for
+                        illustration).</p>
+                        <img
+                        alt="Margin
+                        Test"
+                        src="http://www.ryanjuckett.com/programming/printing-floating-point-numbers/margin_test.gif"
+                        />
+
+                        <ul>
+                            <li><strong>A:</strong>
+                            We
+                            start
+                            off
+                            with
+                            an
+                            input
+                            value
+                            that
+                            has
+                            the
+                            exact
+                            representation
+                            7.625.
+                            The
+                            margin
+                            between
+                            each
+                            value
+                            is
+                            0.25
+                            which
+                            means
+                            that
+                            the
+                            set
+                            of
+                            values
+                            within
+                            0.125
+                            units
+                            below
+                            or
+                            above
+                            the
+                            input
+                            value
+                            can
+                            be
+                            safely
+                            rounded
+                            to
+                            it.
+                            This
+                            plus
+                            or
+                            minus
+                            0.125
+                            range
+                            has
+                            been
+                            highlighted
+                            by
+                            the
+                            box
+                            around
+                            the
+                            end
+                            of
+                            the
+                            value
+                            bar.</li>
+                            <li><strong>B:</strong>
+                            We
+                            divide
+                            our
+                            value
+                            by
+                            10
+                            to
+                            get
+                            the
+                            first
+                            printed
+                            digit,
+                            7.
+                            We
+                            then
+                            set
+                            the
+                            value
+                            to
+                            the
+                            division's
+                            remainder:
+                            0.625.
+                            The
+                            low
+                            end
+                            of
+                            the
+                            margin
+                            box
+                            is
+                            greater
+                            than
+                            zero
+                            and
+                            the
+                            high
+                            end
+                            is
+                            less
+                            than
+                            one.
+                            This
+                            means
+                            that
+                            if
+                            we
+                            were
+                            to
+                            stop
+                            printing
+                            now
+                            and
+                            round
+                            the
+                            current
+                            digit
+                            to
+                            7
+                            or
+                            8,
+                            we
+                            would
+                            print
+                            a
+                            number
+                            closer
+                            to
+                            another
+                            value
+                            than
+                            it
+                            is
+                            to
+                            7.625.
+                            Because
+                            neither
+                            the
+                            rounded-down
+                            or
+                            rounded-up
+                            digit
+                            is
+                            contained
+                            by
+                            our
+                            margin
+                            box,
+                            we
+                            continue.</li>
+                            <li><strong>C:</strong>
+                            To
+                            get
+                            our
+                            next
+                            output
+                            digit
+                            in
+                            the
+                            ones
+                            place,
+                            we
+                            multiply
+                            our
+                            value
+                            by
+                            10
+                            giving
+                            us
+                            6.25.
+                            We
+                            also
+                            multiply
+                            our
+                            margin
+                            by
+                            10
+                            giving
+                            us
+                            a
+                            distance
+                            of
+                            2.5
+                            between
+                            numbers.
+                            The
+                            safe
+                            rounding
+                            distance
+                            of
+                            plus
+                            or
+                            minus
+                            half
+                            the
+                            margin
+                            is
+                            1.25.</li>
+                            <li><strong>D:</strong>
+                            We
+                            divide
+                            our
+                            value
+                            by
+                            10
+                            to
+                            get
+                            the
+                            second
+                            printed
+                            digit,
+                            6.
+                            We
+                            then
+                            set
+                            the
+                            value
+                            to
+                            the
+                            division's
+                            remainder:
+                            0.25.
+                            The
+                            low
+                            end
+                            of
+                            the
+                            margin
+                            box
+                            is
+                            now
+                            less
+                            than
+                            zero
+                            and
+                            the
+                            high
+                            end
+                            is
+                            greater
+                            than
+                            one.
+                            This
+                            means
+                            we
+                            can
+                            safely
+                            stop
+                            printing
+                            and
+                            output
+                            the
+                            current
+                            digit
+                            as
+                            a
+                            6
+                            or
+                            7
+                            because
+                            they
+                            will
+                            both
+                            uniquely
+                            identify
+                            our
+                            number.
+                            By
+                            checking
+                            if
+                            the
+                            remainder
+                            of
+                            0.25
+                            is
+                            below
+                            or
+                            above
+                            0.5
+                            we
+                            can
+                            decide
+                            to
+                            round
+                            down
+                            or
+                            up
+                            (we'll
+                            discuss
+                            ties
+                            shortly).
+                            In
+                            this
+                            case,
+                            we
+                            round
+                            down
+                            and
+                            the
+                            shortest
+                            output
+                            for
+                            7.625
+                            is
+                            "7.6".</li>
+                        </ul>
+
+                        <h2>Unequal
+                            Margins</h2>
+
+                        <p>Unfortunately,
+                        the
+                        IEEE
+                        floating-point
+                        format
+                        adds
+                        an
+                        extra
+                        wrinkle
+                        we
+                        need
+                        to
+                        deal
+                        with.
+                        As
+                        the
+                        exponent
+                        increases,
+                        the
+                        margin
+                        between
+                        adjacent
+                        numbers
+                        also
+                        increases.
+                        This
+                        is
+                        why
+                        floating-point
+                        values
+                        get
+                        less
+                        accurate
+                        as
+                        they
+                        get
+                        farther
+                        from
+                        zero.
+                        For
+                        normalized
+                        values,
+                        every
+                        time
+                        the
+                        mantissa
+                        rolls
+                        over
+                        to
+                        zero,
+                        the
+                        exponent
+                        increases
+                        by
+                        one.
+                        When
+                        this
+                        happens,
+                        the
+                        higher
+                        margin
+                        is
+                        twice
+                        the
+                        size
+                        of
+                        the
+                        lower
+                        margin
+                        and
+                        we
+                        need
+                        to
+                        account
+                        for
+                        this
+                        special
+                        case
+                        when
+                        testing
+                        the
+                        margin
+                        bounds
+                        in
+                        code.</p>
+                        <p>&nbsp;</p>
+                        <p>In
+                        understanding
+                        this
+                        better,
+                        I
+                        find
+                        it
+                        helpful
+                        to
+                        make
+                        a
+                        small
+                        floating-point
+                        format
+                        where
+                        we
+                        can
+                        examine
+                        every
+                        value.
+                        The
+                        tables
+                        below
+                        show
+                        every
+                        positive
+                        floating-point
+                        value
+                        for
+                        a
+                        6-bit
+                        format
+                        that
+                        contains
+                        1
+                        sign
+                        bit,
+                        3
+                        exponent
+                        bits
+                        and
+                        2
+                        mantissa
+                        bits.</p>
+
+                        <h3>Positive
+                            Denormalized
+                            Numbers</h3>
+                        <p>\(value
+                        =
+                        \Large{
+                        \frac{mantissa}{2^2}
+                        \cdot
+                        2^{1+1-2^{3-1}}
+                        =
+                        \frac{mantissa}{4}
+                        \cdot
+                        2^{1-3}}\)</p>
+                        <p>Here
+                        we
+                        can
+                        see
+                        our
+                        format's
+                        minimal
+                        margin
+                        of
+                        0.0625
+                        between
+                        each
+                        number.
+                        No
+                        smaller
+                        delta
+                        can
+                        be
+                        represented.</p>
+                        <p>&nbsp;</p>
+                        <table
+                            cellpadding="4px"
+                            border="1px">
+                            <tr
+                                style="font-weight:bold;
+                                background-color:
+                                #CCC"><td>binary</td>
+                                <td>exponent</td>
+                                <td>mantissa</td>
+                                <td>equation</td>
+                                <td>exact
+                                    value</td>
+                                <td>minimal
+                                    value</td></tr>
+                            <tr><td>0
+                                    000
+                                    00</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>(0/4)*2^(-2)</td>
+                                <td>0</td>
+                                <td>0</td></tr>
+                            <tr><td>0
+                                    000
+                                    01</td>
+                                <td>0</td>
+                                <td>1</td>
+                                <td>(1/4)*2^(-2)</td>
+                                <td>0.0625</td>
+                                <td>0.06</td></tr>
+                            <tr><td>0
+                                    000
+                                    10</td>
+                                <td>0</td>
+                                <td>2</td>
+                                <td>(2/4)*2^(-2)</td>
+                                <td>0.125</td>
+                                <td>0.1</td></tr>
+                            <tr><td>0
+                                    000
+                                    11</td>
+                                <td>0</td>
+                                <td>3</td>
+                                <td>(3/4)*2^(-2)</td>
+                                <td>0.1875</td>
+                                <td>0.2</td></tr>
+                        </table>
+                        <p>&nbsp;</p>
+
+                        <h3>Positive
+                            Normalized
+                            Numbers</h3>
+                        <p>\(value
+                        =
+                        \Large{
+                        (1
+                        +
+                        \frac{mantissa}
+                        {2^2})
+                        \cdot
+                        2^{exponent+1-2^{3-1}}
+                        =
+                        (1
+                        +
+                        \frac{mantissa}{4})
+                        \cdot
+                        2^{exponent-3}}\)</p>
+                        <p>Here
+                        we
+                        can
+                        see
+                        our
+                        format's
+                        lowest
+                        exponent
+                        has
+                        the
+                        minimal
+                        margin
+                        of
+                        0.0625
+                        between
+                        each
+                        number.
+                        Each
+                        time
+                        the
+                        exponent
+                        increases,
+                        so
+                        does
+                        our
+                        margin
+                        by
+                        a
+                        factor
+                        of
+                        two
+                        and
+                        for
+                        our
+                        largest
+                        values
+                        the
+                        margin
+                        is
+                        2.0.</p>
+                        <p>&nbsp;</p>
+                        <table
+                            cellpadding="4px"
+                            border="1px">
+                            <tr
+                                style="font-weight:bold;
+                                background-color:
+                                #CCC">
+                                <td>binary</td>
+                                <td>exponent</td>
+                                <td>mantissa</td>
+                                <td>equation</td>
+                                <td>exact
+                                    value</td>
+                                <td>minimal
+                                    value</td></tr>
+                            <tr
+                                bgcolor="#FFFFFF"><td>0
+                                    001
+                                    00</td>
+                                <td>1</td>
+                                <td>0</td>
+                                <td>(1
+                                    +
+                                    0/4)*2^(-2)</td>
+                                <td>0.25</td>
+                                <td>0.25</td></tr>
+                            <tr
+                                bgcolor="#FFFFFF"><td>0
+                                    001
+                                    01</td>
+                                <td>1</td>
+                                <td>1</td>
+                                <td>(1
+                                    +
+                                    1/4)*2^(-2)</td>
+                                <td>0.3125</td>
+                                <td>0.3</td></tr>
+                            <tr
+                                bgcolor="#FFFFFF"><td>0
+                                    001
+                                    10</td>
+                                <td>1</td>
+                                <td>2</td>
+                                <td>(1
+                                    +
+                                    2/4)*2^(-2)</td>
+                                <td>0.375</td>
+                                <td>0.4</td></tr>
+                            <tr
+                                bgcolor="#FFFFFF"><td>0
+                                    001
+                                    11</td>
+                                <td>1</td>
+                                <td>3</td>
+                                <td>(1
+                                    +
+                                    3/4)*2^(-2)</td>
+                                <td>0.4375</td>
+                                <td>0.44</td></tr>
+
+                            <tr
+                                bgcolor="#EEEEEE"><td>0
+                                    010
+                                    00</td>
+                                <td>2</td>
+                                <td>0</td>
+                                <td>(1
+                                    +
+                                    0/4)*2^(-1)</td>
+                                <td>0.5</td>
+                                <td>0.5</td></tr>
+                            <tr
+                                bgcolor="#EEEEEE"><td>0
+                                    010
+                                    01</td>
+                                <td>2</td>
+                                <td>1</td>
+                                <td>(1
+                                    +
+                                    1/4)*2^(-1)</td>
+                                <td>0.625</td>
+                                <td>0.6</td></tr>
+                            <tr
+                                bgcolor="#EEEEEE"><td>0
+                                    010
+                                    10</td>
+                                <td>2</td>
+                                <td>2</td>
+                                <td>(1
+                                    +
+                                    2/4)*2^(-1)</td>
+                                <td>0.75</td>
+                                <td>0.8</td></tr>
+                            <tr
+                                bgcolor="#EEEEEE"><td>0
+                                    010
+                                    11</td>
+                                <td>2</td>
+                                <td>3</td>
+                                <td>(1
+                                    +
+                                    3/4)*2^(-1)</td>
+                                <td>0.875</td>
+                                <td>0.9</td></tr>
+
+                            <tr
+                                bgcolor="#FFFFFF"><td>0
+                                    011
+                                    00</td>
+                                <td>3</td>
+                                <td>0</td>
+                                <td>(1
+                                    +
+                                    0/4)*2^(0)</td>
+                                <td>1</td>
+                                <td>1</td></tr>
+                            <tr
+                                bgcolor="#FFFFFF"><td>0
+                                    011
+                                    01</td>
+                                <td>3</td>
+                                <td>1</td>
+                                <td>(1
+                                    +
+                                    1/4)*2^(0)</td>
+                                <td>1.25</td>
+                                <td>1.2</td></tr>
+                            <tr
+                                bgcolor="#FFFFFF"><td>0
+                                    011
+                                    10</td>
+                                <td>3</td>
+                                <td>2</td>
+                                <td>(1
+                                    +
+                                    2/4)*2^(0)</td>
+                                <td>1.5</td>
+                                <td>1.5</td></tr>
+                            <tr
+                                bgcolor="#FFFFFF"><td>0
+                                    011
+                                    11</td>
+                                <td>3</td>
+                                <td>3</td>
+                                <td>(1
+                                    +
+                                    3/4)*2^(0)</td>
+                                <td>1.75</td>
+                                <td>1.8</td></tr>
+
+                            <tr
+                                bgcolor="#EEEEEE"><td>0
+                                    100
+                                    00</td>
+                                <td>4</td>
+                                <td>0</td>
+                                <td>(1
+                                    +
+                                    0/4)*2^(1)</td>
+                                <td>2</td>
+                                <td>2</td></tr>
+                            <tr
+                                bgcolor="#EEEEEE"><td>0
+                                    100
+                                    01</td>
+                                <td>4</td>
+                                <td>1</td>
+                                <td>(1
+                                    +
+                                    1/4)*2^(1)</td>
+                                <td>2.5</td>
+                                <td>2.5</td></tr>
+                            <tr
+                                bgcolor="#EEEEEE"><td>0
+                                    100
+                                    10</td>
+                                <td>4</td>
+                                <td>2</td>
+                                <td>(1
+                                    +
+                                    2/4)*2^(1)</td>
+                                <td>3</td>
+                                <td>3</td></tr>
+                            <tr
+                                bgcolor="#EEEEEE"><td>0
+                                    100
+                                    11</td>
+                                <td>4</td>
+                                <td>3</td>
+                                <td>(1
+                                    +
+                                    3/4)*2^(1)</td>
+                                <td>3.5</td>
+                                <td>3.5</td></tr>
+
+                            <tr
+                                bgcolor="#FFFFFF"><td>0
+                                    101
+                                    00</td>
+                                <td>5</td>
+                                <td>0</td>
+                                <td>(1
+                                    +
+                                    0/4)*2^(2)</td>
+                                <td>4</td>
+                                <td>4</td></tr>
+                            <tr
+                                bgcolor="#FFFFFF"><td>0
+                                    101
+                                    01</td>
+                                <td>5</td>
+                                <td>1</td>
+                                <td>(1
+                                    +
+                                    1/4)*2^(2)</td>
+                                <td>5</td>
+                                <td>5</td></tr>
+                            <tr
+                                bgcolor="#FFFFFF"><td>0
+                                    101
+                                    10</td>
+                                <td>5</td>
+                                <td>2</td>
+                                <td>(1
+                                    +
+                                    2/4)*2^(2)</td>
+                                <td>6</td>
+                                <td>6</td></tr>
+                            <tr
+                                bgcolor="#FFFFFF"><td>0
+                                    101
+                                    11</td>
+                                <td>5</td>
+                                <td>3</td>
+                                <td>(1
+                                    +
+                                    3/4)*2^(2)</td>
+                                <td>7</td>
+                                <td>7</td></tr>
+
+                            <tr
+                                bgcolor="#EEEEEE"><td>0
+                                    110
+                                    00</td>
+                                <td>6</td>
+                                <td>0</td>
+                                <td>(1
+                                    +
+                                    0/4)*2^(3)</td>
+                                <td>8</td>
+                                <td>8</td></tr>
+                            <tr
+                                bgcolor="#EEEEEE"><td>0
+                                    110
+                                    01</td>
+                                <td>6</td>
+                                <td>1</td>
+                                <td>(1
+                                    +
+                                    1/4)*2^(3)</td>
+                                <td>10</td>
+                                <td>10</td></tr>
+                            <tr
+                                bgcolor="#EEEEEE"><td>0
+                                    110
+                                    10</td>
+                                <td>6</td>
+                                <td>2</td>
+                                <td>(1
+                                    +
+                                    2/4)*2^(3)</td>
+                                <td>12</td>
+                                <td>11</td></tr>
+                            <tr
+                                bgcolor="#EEEEEE"><td>0
+                                    110
+                                    11</td>
+                                <td>6</td>
+                                <td>3</td>
+                                <td>(1
+                                    +
+                                    3/4)*2^(3)</td>
+                                <td>14</td>
+                                <td>12</td></tr>
+                        </table>
+                        <p>&nbsp;</p>
+
+                        <h3>Positive
+                            Infinity</h3>
+                        <table
+                            cellpadding="4px"
+                            border="1px">
+                            <tr
+                                style="font-weight:bold;
+                                background-color:
+                                #CCC"><td>binary</td><td>exponent</td><td>mantissa</td><td>value</td></tr>
+                            <tr><td>0
+                                    111
+                                    00</td><td>7</td><td>0</td><td>Inf</td></tr>
+                        </table>
+                        <p>&nbsp;</p>
+
+                        <h3>Positive
+                            NaNs</h3>
+                        <table
+                            cellpadding="4px"
+                            border="1px">
+                            <tr
+                                style="font-weight:bold;
+                                background-color:
+                                #CCC"><td>binary</td><td>exponent</td><td>mantissa</td><td>value</td></tr>
+                            <tr><td>0
+                                    111
+                                    01</td><td>7</td><td>1</td><td>NaN</td></tr>
+                            <tr><td>0
+                                    111
+                                    10</td><td>7</td><td>2</td><td>NaN</td></tr>
+                            <tr><td>0
+                                    111
+                                    11</td><td>7</td><td>3</td><td>NaN</td></tr>
+                        </table>
+                        <p>&nbsp;</p>
+                        <p>As
+                        far
+                        as
+                        I
+                        can
+                        tell,
+                        the
+                        original
+                        Dragon4
+                        paper
+                        by
+                        Steele
+                        and
+                        White
+                        actually
+                        computes
+                        the
+                        low
+                        margin
+                        wrong
+                        for
+                        the
+                        lowest
+                        normalized
+                        value
+                        because
+                        it
+                        divides
+                        it
+                        in
+                        half.
+                        It
+                        should
+                        actually
+                        remain
+                        the
+                        same
+                        because
+                        the
+                        transition
+                        from
+                        denormalized
+                        to
+                        normalized
+                        numbers
+                        does
+                        not
+                        change
+                        the
+                        exponent.
+                        This
+                        error
+                        is
+                        not
+                        present
+                        in
+                        the
+                        follow-up
+                        paper
+                        by
+                        Burger
+                        and
+                        Dybvig.</p>
+                        <p>&nbsp;</p>
+
+
+                        <h2>Breaking
+                            Ties</h2>
+
+                        <p>When
+                        deciding
+                        how
+                        to
+                        round-off
+                        the
+                        final
+                        printed
+                        digit,
+                        it
+                        is
+                        possible
+                        for
+                        the
+                        exact
+                        value
+                        to
+                        lie
+                        directly
+                        between
+                        the
+                        lower
+                        digit
+                        and
+                        the
+                        higher
+                        digit.
+                        In
+                        this
+                        case,
+                        a
+                        rounding
+                        rule
+                        needs
+                        to
+                        be
+                        decided.
+                        You
+                        could
+                        round
+                        towards
+                        zero,
+                        away
+                        from
+                        zero,
+                        towards
+                        negative
+                        infinity,
+                        etc.
+                        In
+                        my
+                        implementation,
+                        I
+                        always
+                        round
+                        to
+                        the
+                        even
+                        digit
+                        because
+                        it
+                        is
+                        similar
+                        to
+                        the
+                        rule
+                        used
+                        by
+                        IEEE
+                        floating-point
+                        operations.</p>
+                        <p>&nbsp;</p>
+                        <p>In
+                        the
+                        reverse
+                        algorithm
+                        of
+                        converting
+                        decimal
+                        strings
+                        into
+                        binary
+                        floating-point,
+                        you
+                        can
+                        hit
+                        a
+                        similar
+                        case
+                        where
+                        the
+                        string
+                        representation
+                        lies
+                        exactly
+                        between
+                        to
+                        representable
+                        numbers.
+                        Once
+                        again,
+                        a
+                        rounding
+                        rule
+                        must
+                        be
+                        chosen.
+                        If
+                        you
+                        know
+                        this
+                        rule
+                        in
+                        both
+                        algorithms,
+                        there
+                        are
+                        times
+                        when
+                        you
+                        can
+                        print
+                        out
+                        a
+                        unique
+                        representation
+                        of
+                        a
+                        number
+                        with
+                        one
+                        less
+                        digit.
+                        For
+                        example,
+                        consider
+                        how
+                        the
+                        digit
+                        printing
+                        algorithm
+                        tests
+                        if
+                        half
+                        the
+                        high-margin
+                        encompasses
+                        a
+                        digit
+                        to
+                        round-up
+                        to.
+                        I
+                        tested
+                        if
+                        the
+                        remaining
+                        value
+                        was
+                        <em>greater
+                            than</em>
+                        one.
+                        If
+                        we
+                        knew
+                        how
+                        the
+                        reverse
+                        algorithm
+                        would
+                        handle
+                        ties,
+                        we
+                        might
+                        be
+                        able
+                        to
+                        test
+                        <em>greater
+                            than
+                            or
+                            equal
+                            to</em>
+                        one.
+                        David
+                        Gay's
+                        <span
+                            style="font-family:'Courier
+                            New',
+                            Courier,
+                            monospace">dtoa</span>
+                        implementation
+                        seems
+                        to
+                        do
+                        this;
+                        therefor
+                        it
+                        should
+                        always
+                        be
+                        run
+                        in
+                        conjunction
+                        with
+                        his
+                        strtod
+                        implementation.</p>
+                        <p>&nbsp;</p>
+                        <p>Personally,
+                        I
+                        prefer
+                        printing
+                        extra
+                        digits
+                        until
+                        the
+                        rounded
+                        number
+                        is
+                        inclusively
+                        contained
+                        within
+                        the
+                        margin.
+                        This
+                        way
+                        the
+                        output
+                        is
+                        guaranteed
+                        to
+                        uniquely
+                        identify
+                        the
+                        number
+                        regardless
+                        of
+                        the
+                        tie
+                        breaking
+                        algorithm
+                        chosen
+                        by
+                        a
+                        strtod
+                        parser.
+                        Unfortunately,
+                        this
+                        is
+                        only
+                        guaranteed
+                        for
+                        a
+                        proper
+                        strtod
+                        implementation.
+                        The
+                        implementation
+                        that
+                        ships
+                        with
+                        Microsoft
+                        Visual
+                        C++
+                        2010
+                        Express
+                        sometimes
+                        has
+                        an
+                        off-by-one
+                        error
+                        when
+                        rounding
+                        to
+                        the
+                        closest
+                        value.
+                        For
+                        example,
+                        the
+                        input
+                        "6.439804741657803e-031"
+                        should
+                        output
+                        the
+                        64-bit
+                        double
+                        0x39AA1F79C0000000,
+                        but
+                        instead
+                        outputs
+                        0x39AA1F79BFFFFFFF.
+                        I
+                        can't
+                        say
+                        for
+                        certain
+                        where
+                        Microsoft's
+                        bug
+                        comes
+                        from,
+                        but
+                        I
+                        can
+                        say
+                        that
+                        the
+                        problem
+                        of
+                        reading
+                        a
+                        decimal
+                        string
+                        is
+                        more
+                        difficult
+                        than
+                        printing
+                        a
+                        decimal
+                        string
+                        so
+                        it's
+                        more
+                        likely
+                        to
+                        have
+                        bugs.
+                        Hopefully
+                        I
+                        can
+                        find
+                        the
+                        time
+                        to
+                        try
+                        my
+                        hands
+                        at
+                        it
+                        in
+                        the
+                        near
+                        future.</p>
+                        <p>&nbsp;</p>
+
+                        <h2>Coding
+                            Dragon4</h2>
+                        Next,
+                        we
+                        will
+                        program
+                        an
+                        optimized
+                        implementation
+                        of
+                        the
+                        Dragon4
+                        algorithm.
+                        <a
+                            href="http://www.ryanjuckett.com/programming/printing-floating-point-numbers/part-2/">Click
+                            here
+                            to
+                            read
+                            part
+                            2.</a>.
+                        <p>&nbsp;</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td
+                        id="content_comments"
+                        colspan="3">
+                        <div
+                            id="disqus_thread"></div>
+                        <script
+type="text/javascript">
+var disqus_shortname = "ryanjuckett";var disqus_identifier = "programming_printing-floating-point-numbers";var disqus_title = "Printing Floating-Point Numbers"; var disqus_url = "http://www.ryanjuckett.com/programming/printing-floating-point-numbers";  </script>
+                        <script
+type="text/javascript">
+(function() {
+ var dsq = document.createElement("script"); dsq.type = "text/javascript"; dsq.async = true;
+ dsq.src = "http://" + disqus_shortname + ".disqus.com/embed.js";
+ (document.getElementsByTagName("head")[0] || document.getElementsByTagName("body")[0]).appendChild(dsq);
+ })();
+                        </script>
+                        <noscript>
+                            <a href="http://ryanjuckett.disqus.com/?url=ref">View the forum thread.</a>
+                        </noscript>
+                        <div class="disqus_credits">
+                            <a href="http://disqus.com" class="dsq-brlink">
+                                blog comments powered by <span class="logo-disqus">Disqus</span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" style="padding:0">
+            <table id="copyright">
+                <tr>
+                    <td id="copyright_left"></td>
+                    <td colspan="2" id="copyright_center">
+                        <p style="text-align: center;">
+                        <a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />
+                        RyanJuckett.com site content is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.            
+                        </p>
+                    </td>
+                    <td id="copyright_right"></td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+<script type="text/javascript">
+SyntaxHighlighter.autoloader(
+        'applescript                  http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushAppleScript.js',
+        'actionscript3 as3        http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushAS3.js',
+        'bash shell                   http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushBash.js',
+        'coldfusion cf              http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushColdFusion.js',
+        'cpp c                          http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushCpp.js',
+        'c# c-sharp csharp        http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushCSharp.js',
+        'css                              http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushCss.js',
+        'delphi pascal              http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushDelphi.js',
+        'diff patch pas             http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushDiff.js',
+        'erl erlang                   http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushErlang.js',
+        'groovy                         http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushGroovy.js',
+        'java                             http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushJava.js',
+        'jfx javafx                   http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushJavaFX.js',
+        'js jscript javascript  http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushJScript.js',
+        'perl pl                        http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushPerl.js',
+        'php                              http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushPhp.js',
+        'text plain                   http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushPlain.js',
+        'py python                    http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushPython.js',
+        'powershell ps posh       http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushPowerShell.js',
+        'ruby rails ror rb        http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushRuby.js',
+'sass scss                    http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushSass.js',
+'scala                          http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushScala.js',
+'sql                              http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushSql.js',
+'vb vbnet                       http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushVb.js',
+'xml xhtml xslt html      http://www.ryanjuckett.com/SyntaxHighlighter/scripts/shBrushXml.js'
+);
+
+SyntaxHighlighter.all();
+</script>;
+
+</html>
+

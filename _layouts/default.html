@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>
+        {% if page.title %}
+            {{ page.title }}
+        {% else %}
+            {{ site.title }}
+        {% endif %}         
+    </title>
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
+    <meta http-equiv="Cache-Control" content="max-age=1209600">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"/>
+    <meta name="generator" content="Jekyll" />
+    <meta name="author" content="{{ site.author.name }}" />
+    <meta name="description" content="{{ page.description }}" />
+    <meta name="keywords" content="{{ page.keywords | join: ',' }}" />
+    <!-- //页面样式 -->
+    <link rel="stylesheet" href="{{ site.url }}{{ site.themes }}/css/style.css" type="text/css"/>
+    <!-- <link rel="stylesheet" href="{{ site.url }}{{ site.themes }}/css/pygments.css" type="text/css" /> -->
+    <!-- <link href="https://cdn.bootcss.com/highlight.js/9.12.0/styles/solarized-dark.min.css" rel="stylesheet" media="print"> -->
+<style>
+.hljs{display:block;overflow-x:auto;padding:0.5em;background:#002b36;color:#839496}.hljs-comment,.hljs-quote{color:#586e75}.hljs-keyword,.hljs-selector-tag,.hljs-addition{color:#859900}.hljs-number,.hljs-string,.hljs-meta .hljs-meta-string,.hljs-literal,.hljs-doctag,.hljs-regexp{color:#2aa198}.hljs-title,.hljs-section,.hljs-name,.hljs-selector-id,.hljs-selector-class{color:#268bd2}.hljs-attribute,.hljs-attr,.hljs-variable,.hljs-template-variable,.hljs-class .hljs-title,.hljs-type{color:#b58900}.hljs-symbol,.hljs-bullet,.hljs-subst,.hljs-meta,.hljs-meta .hljs-keyword,.hljs-selector-attr,.hljs-selector-pseudo,.hljs-link{color:#cb4b16}.hljs-built_in,.hljs-deletion{color:#dc322f}.hljs-formula{background:#073642}.hljs-emphasis{font-style:italic}.hljs-strong{font-weight:bold}
+</style>
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"> </script>
+    <script> hljs.initHighlightingOnLoad(); </script>
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+</head>
+<body id="violet">
+    <div class="page-wrapper">
+        <section class="head" id="violet-head">
+            <header class="header" id="violet-header">
+                <h1 class="logo"><a href="{{ site.url }}">{{ site.title }}</a></h1>
+                <h2 class="subtitle">{{ site.subTitle }} <a href="https://coindataflow.com/de/aktie/BE"><img class="cdf" src="cdf.svg" alt="bloom energy"></a></h2>
+            </header>
+            <nav class="nav" id="violet-nav">
+                <ul class="nav-list">
+                    {% for link in site.nav %}
+                    {% if page.url == link.url%}
+                      {% assign active = 'nav-item-active' %}
+                    {% endif %}
+                    <li class="nav-item {{ active }}">
+                        <a href="{{ link.url }}">
+                            {{ link.text }}
+                        </a>
+                        {{ indicator }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        </section>
+        <section class="main" id="violet-main">
+            {{ content }}
+        </section>
+        <footer class="foot" id="violet-foot">
+            <div class="footer fn-clear">
+                <h1 class="logo">{{ site.title }}</h1>
+            </div>
+            <div class="copyright">
+                <div class="copyright-cnt fn-clear">
+                    {% for link in site.follow %}
+                    <a class="follow" href="{{ link.url }}" target="_blank" rel="noopener"><i class="fa {{ link.class }}"></i></a>
+                    {% endfor %}
+                    <p class="text">Powered by <a href="#">Jekyll</a> & <a href="#">Github</a> | Copyright 2012 - 2014 by <a href="#">besteric</a> | Design by <a href="#">zhanxin.lin</a></p>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <script type="text/javascript">
+        var headImgArr = [];
+        {% for imgsrc in site.headimg %}
+            headImgArr.push("{{ imgsrc.item }}");
+        {% endfor %}
+        if(headImgArr.length <= 0) {
+            headImgArr = ["/T1U_YlFAlcXXbErygJ-2048-260.jpg"];
+            var item = 0;
+        } else {
+            var item = Math.floor(Math.random() * (headImgArr.length));
+        }
+        $("#violet-head").css({
+            "background-image": "url(" + headImgArr[item] + ")"
+        });
+    </script>
+</body>
+</html>
